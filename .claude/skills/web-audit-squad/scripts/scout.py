@@ -17,7 +17,7 @@ from typing import Iterable
 
 SOURCE_EXTS = {'.tsx', '.jsx', '.ts', '.js', '.mjs', '.cjs', '.html', '.md', '.mdx', '.vue', '.svelte'}
 ROUTE_EXTS = {'.tsx', '.jsx', '.ts', '.js', '.mdx'}
-SKIP_DIRS = {'node_modules', '.next', 'dist', 'build', '.git', '.claude', 'coverage', '.turbo', '.cache', 'vendor', '.venv'}
+SKIP_DIRS = {'node_modules', '.next', 'dist', 'build', '.git', '.claude', 'coverage', '.turbo', '.cache', 'vendor', '.venv', 'docs', 'playwright-report', '.agents'}
 MAX_FILE_BYTES = 700_000
 
 LINK_PATTERNS = [
@@ -73,6 +73,13 @@ class FileSignal:
     client_component: bool
     has_form: bool
     todos: int
+
+
+def is_product_file(root: Path, path: Path) -> bool:
+    try:
+        return path.relative_to(root).parts[0] in {'src', 'app'}
+    except (ValueError, IndexError):
+        return False
 
 
 def rel(path: Path, root: Path) -> str:
@@ -131,17 +138,18 @@ def route_from_pages_file(pages: Path, file: Path) -> str:
 
 def infer_routes(root: Path) -> list[Route]:
     routes: list[Route] = []
-    app = root / 'app'
-    if app.exists():
-        for p in app.rglob('*'):
-            if p.name.split('.')[0] not in {'page', 'route'} or p.suffix not in ROUTE_EXTS:
-                continue
-            if any(part in SKIP_DIRS for part in p.parts):
-                continue
-            route = route_from_app_file(app, p)
-            kind = 'api' if p.name.startswith('route.') else 'page'
-            priority = priority_for_route(route, p)
-            routes.append(Route(route, rel(p, root), f'app-router-{kind}', ':' in route or '*' in route, priority))
+    for app in [root / 'src' / 'app', root / 'app']:
+        if app.exists():
+            for p in app.rglob('*'):
+                if p.name.split('.')[0] not in {'page', 'route'} or p.suffix not in ROUTE_EXTS:
+                    continue
+                if any(part in SKIP_DIRS for part in p.parts):
+                    continue
+                route = route_from_app_file(app, p)
+                kind = 'api' if p.name.startswith('route.') else 'page'
+                priority = priority_for_route(route, p)
+                routes.append(Route(route, rel(p, root), f'app-router-{kind}', ':' in route or '*' in route, priority))
+            break
     pages = root / 'pages'
     if pages.exists():
         for p in pages.rglob('*'):
@@ -178,6 +186,8 @@ def scan_links(root: Path, routes: list[Route]) -> list[LinkFinding]:
     has_dynamic = any(r.dynamic for r in routes)
     findings: list[LinkFinding] = []
     for p in iter_files(root):
+        if not is_product_file(root, p):
+            continue
         text = read_text(p)
         source = rel(p, root)
         for pat in LINK_PATTERNS:
@@ -201,13 +211,17 @@ def scan_links(root: Path, routes: list[Route]) -> list[LinkFinding]:
 def scan_secrets(root: Path) -> list[SecretFinding]:
     findings: list[SecretFinding] = []
     for p in iter_files(root):
-        source = rel(p, root)
-        # Avoid flagging our own scanner docs too aggressively.
-        if source.startswith('.claude/skills/web-audit-squad/'):
+        if not is_product_file(root, p):
             continue
+        source = rel(p, root)
         text = read_text(p)
         for name, pat in SECRET_PATTERNS.items():
             for m in pat.finditer(text):
+                line_start = text.rfind('\n', 0, m.start()) + 1
+                line_end = text.find('\n', m.end())
+                line_text = text[line_start:line_end if line_end != -1 else len(text)]
+                if 'process.env.' in line_text:
+                    continue
                 ln = line_no(text, m.start())
                 severity = 'P0/P1' if name in {'supabase-service-role', 'database-url', 'aws-secret', 'private-key', 'payment-secret'} else 'P1/P2'
                 findings.append(SecretFinding(severity, source, ln, name, 'Potential secret reference. Value redacted by scanner.'))

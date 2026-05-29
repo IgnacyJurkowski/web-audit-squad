@@ -40,8 +40,8 @@ Common follow-ups:
 |---|---|
 | `init` | Create `.claude/web-audit-squad/` state files |
 | `map` | Run scout, refresh `WEB_STRUCTURE.md` and `CURRENT_STATE.md` |
-| `audit [scope]` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). If not, run map first. Then rank pages and audit in priority order. |
-| `page <route>` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). If not, run map first. Then run the full seven-agent audit of the specified route/page. |
+| `audit [scope]` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). Also verify SCOUT.json `routes` array length > 0; if routes = 0, treat as stale regardless of mtime. If stale or incomplete, run map first. Then rank pages and audit in priority order. |
+| `page <route>` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). Also verify SCOUT.json `routes` array length > 0; if routes = 0, treat as stale regardless of mtime. If stale or incomplete, run map first. Then run the full seven-agent audit of the specified route/page. |
 | `backlog` | Summarize P0/P1/P2 queue and next execution order |
 | `implement-plan` | Implement an accepted plan. Before touching any product file, print: "Ready to implement [N] changes from BACKLOG.md. Type CONFIRM to proceed or CANCEL to abort." Do not edit product code until the user sends the exact word CONFIRM in their next message. |
 
