@@ -18,7 +18,10 @@ Every finding must cite at least one of:
 ## Backlog item lifecycle
 `open` → `accepted` (user approves) → `done` (verified) | `wont-fix` (user rejects with reason)
 
+`open` → `needs-verification` (finding is disputed or cannot be confirmed statically — requires a manual check before acting on it)
+
 Items may not move from `open` to `done` without passing through `accepted`.
+Items in `needs-verification` must have a defined manual check in the Evidence field before they can move to `accepted` or `wont-fix`.
 
 ## Implement-plan guard
 Before any product-code edit, the orchestrator must:

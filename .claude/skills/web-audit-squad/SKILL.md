@@ -12,6 +12,8 @@ allowed-tools:
   - Bash(python3 .claude/skills/web-audit-squad/scripts/scout.py *)
   - Bash(python3 .claude/skills/web-audit-squad/scripts/state.py *)
   - Bash(stat *)
+  - Bash(mkdir -p .claude/web-audit-squad/tmp)
+  - Bash(rm .claude/web-audit-squad/tmp/*)
 ---
 
 # Web Audit Squad
@@ -43,7 +45,8 @@ Common follow-ups:
 | `audit [scope]` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). Also verify SCOUT.json `routes` array length > 0; if routes = 0, treat as stale regardless of mtime. If stale or incomplete, run map first. Then rank pages and audit in priority order. |
 | `page <route>` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). Also verify SCOUT.json `routes` array length > 0; if routes = 0, treat as stale regardless of mtime. If stale or incomplete, run map first. Then run the full seven-agent audit of the specified route/page. |
 | `backlog` | Summarize P0/P1/P2 queue and next execution order |
-| `implement-plan` | Implement an accepted plan. Before touching any product file, print: "Ready to implement [N] changes from BACKLOG.md. Type CONFIRM to proceed or CANCEL to abort." Do not edit product code until the user sends the exact word CONFIRM in their next message. |
+| `status` | Print a progress table: pages audited ✅ / in-progress 🔄 / queued — with P0/P1/P2 counts per page |
+| `implement-plan [ID,ID,...]` | Implement specific backlog items by ID (e.g. `implement-plan A-001,A-002`). If no IDs given, list accepted items and ask which to implement. Before touching any product file, print: "Ready to implement [N] changes from BACKLOG.md. Type CONFIRM to proceed or CANCEL to abort." Do not edit product code until the user sends the exact word CONFIRM in their next message. |
 
 ## Orchestrator execution protocol
 
@@ -57,6 +60,22 @@ Common follow-ups:
 4. Ask each subagent for max 8 findings. No long code excerpts. Use paths/line numbers instead.
 5. Audit one page/flow at a time. Do not run all pages through all agents in one giant pass.
 6. Persist durable facts in `.claude/web-audit-squad/`; do not rely on chat memory.
+
+### Agent output handling
+
+To prevent context overflow, subagents must NOT return findings inline. Instead:
+
+Each subagent MUST write its findings table to a temp file:
+`.claude/web-audit-squad/tmp/<agent-name>-<route>.md`
+
+Each subagent returns ONLY: `"Done. Findings written to tmp/<agent-name>-<route>.md"`
+
+The orchestrator then reads those tmp files during Phase 5 synthesis, and deletes them afterwards:
+```bash
+mkdir -p .claude/web-audit-squad/tmp
+# after synthesis:
+rm .claude/web-audit-squad/tmp/*
+```
 
 ## Persistent audit workspace
 
@@ -83,7 +102,7 @@ Each item must follow this format:
 - **Evidence**: <file:line or observed behaviour>
 - **Fix direction**: <one sentence>
 - **Verification**: <how to confirm it is fixed>
-- **Status**: open | accepted | done | wont-fix
+- **Status**: open | accepted | done | wont-fix | needs-verification
 ```
 
 ### DECISIONS.md schema
@@ -125,9 +144,13 @@ Prioritize pages by business/risk impact:
 
 ### Phase 3 — seven-agent review
 
-For each selected page, dispatch all seven subagents in parallel when Claude Code supports it. If the runtime serializes calls, still keep each agent in its own context.
+Before dispatching agents, read:
+- `.claude/skills/web-audit-squad/references/agents.md` — output formats and per-agent constraints
+- `.claude/skills/web-audit-squad/references/protocol.md` — severity definitions, evidence requirements, lifecycle rules
 
-Agent names and focus — see `references/agents.md` for full output formats:
+For each selected page, dispatch the first six subagents in parallel when Claude Code supports it. **Do not include `web-page-executor` in the parallel batch** — it runs in Phase 5 after synthesis. If the runtime serializes calls, still keep each agent in its own context.
+
+Agent names and focus (see `references/agents.md` for full output formats):
 - `web-db-security-performance` — secrets, RLS, SQL injection, N+1 queries, storage exposure
 - `web-uiux-performance-designer` — UX, CTAs, accessibility, perceived performance
 - `web-heuristics-guardian` — Nielsen's 10 heuristics, names violations, two fixes each
@@ -145,16 +168,21 @@ User job: <one sentence>
 Source files to inspect: <short list>
 Known routes/links/actions: <short list from WEB_STRUCTURE.md>
 Known stack/data dependencies: <short list>
-Constraints: audit-only, max 8 findings, evidence required, no product-code edits.
-Return: only your role-specific table plus top 3 recommendations.
+Constraints: audit-only, max 8 findings, ranked by severity descending (highest risk first), evidence required (file:line), no product-code edits.
+Return: write your role-specific table plus top 3 recommendations to `.claude/web-audit-squad/tmp/<agent-name>-<route>.md`, then reply only: "Done. Findings written to tmp/<agent-name>-<route>.md"
 ```
 
-### Phase 4 — UI/UX correction loop
+### Phase 4 — UI/UX correction loop (sequential, NOT parallel)
 
-1. web-uiux-performance-designer proposes improvements.
-2. Heuristics Guardian checks those proposals against Nielsen's 10 heuristics.
-3. If a violation exists, record heuristic, breakage, two fixes, and chosen option.
-4. web-uiux-performance-designer's final recommendation must use the chosen option.
+Run this phase only after Phase 3 agents have completed. Do NOT include these agents in the Phase 3 parallel batch.
+
+1. Run `web-uiux-performance-designer` first. Wait for its findings file to be written before proceeding.
+2. Pass those UX proposals to `web-heuristics-guardian` as explicit input: include the proposals in the delegation packet.
+3. Only after `web-heuristics-guardian` responds, finalize UX recommendations.
+4. If a heuristic violation exists, record: violated heuristic, observed breakage, two fixes, and chosen option.
+5. The final UX recommendation must incorporate the chosen option.
+
+Skip Phase 4 entirely if `web-uiux-performance-designer` finds no structural UX changes (only non-UX findings).
 
 ### Phase 5 — synthesis and backlog
 
