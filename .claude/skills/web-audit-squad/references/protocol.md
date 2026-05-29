@@ -1,37 +1,44 @@
-# Web Audit Squad protocol
+# Audit protocol standards
 
-## Severity
+## Severity definitions
+| Level | Meaning | Default priority |
+|---|---|---|
+| critical | Data loss, auth bypass, payment failure, security breach | P0 |
+| high | Broken flow, inaccessible feature, significant conversion drop | P0–P1 |
+| medium | UX friction, performance issue, missed opportunity | P1–P2 |
+| low | Polish, minor copy, micro-optimisation | P2 |
 
-- P0: exposed secret, auth/payment breakage, data leak, public sensitive storage, unusable core route, dead primary CTA, destructive bug.
-- P1: serious conversion/speed/trust/maintainability issue likely to hurt users or operations.
-- P2: polish, optional upside, lower-risk optimization.
+## Evidence requirements
+Every finding must cite at least one of:
+- `file:line` reference
+- Observed browser behaviour (describe exactly)
+- Network/API response (status code + endpoint)
+- `unknown` — if evidence cannot be obtained statically, define the manual check needed
 
-## Evidence standard
+## Backlog item lifecycle
+`open` → `accepted` (user approves) → `done` (verified) | `wont-fix` (user rejects with reason)
 
-Every finding should include at least one of:
-- file path and line;
-- route and link/action target;
-- command output from scout;
-- visible UI behavior;
-- missing file/route proof;
-- unknown that requires verification.
+Items may not move from `open` to `done` without passing through `accepted`.
 
-Do not paste long code. Quote only the exact identifier or 1-3 line fragment required to prove the point.
+## Implement-plan guard
+Before any product-code edit, the orchestrator must:
+1. Print the confirmation prompt defined in the Commands table.
+2. Receive the exact word `CONFIRM` from the user.
+3. Log the confirmation timestamp and item count in `DECISIONS.md`.
 
-## Page priority formula
+## Audit-only mode
+Default mode. The orchestrator and all subagents may:
+- Read any file
+- Write to `.claude/web-audit-squad/` only
+- Run `scout.py` and `state.py`
 
-Score each page 0-10:
-- +3 revenue/payment/auth/core product;
-- +2 landing/pricing/onboarding/public booking;
-- +2 data-heavy/admin/security-sensitive;
-- +1 high traffic or main navigation;
-- +1 known broken links/actions;
-- +1 high business uncertainty.
+They must not:
+- Edit product source files
+- Run `npm install`, `git commit`, migrations, or deploys
+- Delete files outside the audit workspace
 
-## Agent conflict resolution
-
-1. Security/database P0 overrides all.
-2. Contrarian blockers override expansion ideas.
-3. First-principles can freeze a working area.
-4. Heuristics guardian can veto UX ideas with a named heuristic violation.
-5. Executor decides implementation order, not product value.
+## Loop control
+After completing Phase 5 for a page:
+1. Update `BACKLOG.md` and `CURRENT_STATE.md`.
+2. Print a one-line summary: "Page `<route>` complete. P0: N, P1: N, P2: N. Next in queue: `<route>` — run `/web-audit-squad page <route>` to continue."
+3. Stop. Do not auto-advance to the next page without a user command.

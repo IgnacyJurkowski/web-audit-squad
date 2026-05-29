@@ -1,6 +1,7 @@
 ---
 name: web-audit-squad
-description: Use when auditing a web app for security holes, broken flows, UX problems, performance issues, or revenue opportunities. Dispatches seven specialized subagents in parallel. Works with Next.js, React, Vue, Svelte, and similar frameworks.
+version: "1.0.0"
+description: Use when auditing a web app for security holes, broken flows, UX problems, performance issues, or revenue opportunities. Dispatches seven specialized subagents (parallel when supported, sequential otherwise). Works with Next.js, React, Vue, Svelte, and similar frameworks. Do not use for static HTML-only sites, mobile apps, or non-web codebases.
 disable-model-invocation: true
 argument-hint: "init | map | audit [scope] | page [route] | backlog | implement-plan"
 allowed-tools:
@@ -38,12 +39,12 @@ Common follow-ups:
 |---|---|
 | `init` | Create `.claude/web-audit-squad/` state files |
 | `map` | Run scout, refresh `WEB_STRUCTURE.md` and `CURRENT_STATE.md` |
-| `audit [scope]` | Map if needed, rank pages, audit priority pages one by one |
+| `audit [scope]` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). If not, run map first. Then rank pages and audit in priority order. |
 | `page <route>` | Full seven-agent audit of one route/page |
 | `backlog` | Summarize P0/P1/P2 queue and next execution order |
-| `implement-plan` | Implement an accepted plan (requires explicit user approval) |
+| `implement-plan` | Implement an accepted plan. Before touching any product file, print: "Ready to implement [N] changes from BACKLOG.md. Type CONFIRM to proceed or CANCEL to abort." Do not edit product code until the user sends the exact word CONFIRM in their next message. |
 
-## Token-light protocol
+## Orchestrator execution protocol
 
 1. Never read the whole repository. Start with:
    ```bash
@@ -68,6 +69,30 @@ Maintain:
   DECISIONS.md          # why we changed/kept/removed things
   SCOUT.json            # machine-readable scout output
   PAGE_AUDITS/          # one file per audited page
+```
+
+### BACKLOG.md schema
+Each item must follow this format:
+```md
+### [ID] <short title>
+- **Priority**: P0 | P1 | P2
+- **Page/route**: <route>
+- **Agent(s)**: <which agents flagged this>
+- **Severity**: critical | high | medium | low
+- **Evidence**: <file:line or observed behaviour>
+- **Fix direction**: <one sentence>
+- **Verification**: <how to confirm it is fixed>
+- **Status**: open | accepted | done | wont-fix
+```
+
+### DECISIONS.md schema
+Each entry must follow this format:
+```md
+### [DATE] <decision title>
+- **Context**: why this decision arose
+- **Options considered**: list
+- **Chosen**: what was picked and why
+- **Reversibility**: easy | hard | irreversible
 ```
 
 Update `WEB_STRUCTURE.md` before page-level opinions. Update `BACKLOG.md` after every page synthesis.
@@ -140,6 +165,8 @@ Merge the agent results into:
 - regression checks;
 - rollback notes.
 
+De-duplication rule: if two or more agents flag the same issue (matched by file path + symptom), keep only the highest-severity instance. Note the source agents in the Evidence column.
+
 Persist page output to `PAGE_AUDITS/<safe-route-name>.md` when asked to update docs. Add accepted items to `BACKLOG.md`.
 
 ## Output contract
@@ -159,8 +186,8 @@ For each page:
 |---|---|---|---|---|---|
 
 ## Seven-agent synthesis
-| Agent | Highest-risk finding | Best opportunity | Evidence | Recommendation |
-|---|---|---|---|---|
+| Agent | Priority | Highest-risk finding | Best opportunity | Evidence | Recommendation |
+|---|---|---|---|---|---|
 
 ## Nielsen correction loop
 | UX proposal | Heuristic issue | Fix A | Fix B | Chosen |
