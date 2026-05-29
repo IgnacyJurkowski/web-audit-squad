@@ -1,6 +1,6 @@
 ---
 name: web-audit-squad
-description: Manual command for a token-light seven-subagent web app audit: setup state files, map routes/links, update web structure docs, run database/security/performance, UX, Nielsen, contrarian, upside, first-principles, and executor planning reviews.
+description: Use when auditing a web app for security holes, broken flows, UX problems, performance issues, or revenue opportunities. Dispatches seven specialized subagents in parallel. Works with Next.js, React, Vue, Svelte, and similar frameworks.
 disable-model-invocation: true
 argument-hint: "init | map | audit [scope] | page [route] | backlog | implement-plan"
 allowed-tools:
@@ -18,14 +18,30 @@ Run the workflow requested in `$ARGUMENTS`.
 
 Default: **audit, document, and plan only**. Do not edit product code unless the user explicitly asks for implementation. Updating `.claude/web-audit-squad/*.md` audit files is allowed when the user asks for state/backlog/doc updates.
 
-## Operating modes
+## Quick start
 
-- `init`: create `.claude/web-audit-squad/` state files.
-- `map`: run scout, update `WEB_STRUCTURE.md` and `CURRENT_STATE.md`.
-- `audit`: map first if needed, rank pages, then audit priority pages one by one.
-- `page <route>`: audit one route/page and create a page fix plan.
-- `backlog`: summarize P0/P1/P2 backlog and next execution order.
-- `implement-plan`: only after explicit user approval, implement the accepted plan with normal Claude Code safeguards.
+Typical first session:
+```text
+/web-audit-squad init and map this project. Then audit the landing page and auth flow in priority order. Audit-only: update audit docs, do not edit app code.
+```
+
+Common follow-ups:
+```text
+/web-audit-squad page /pricing
+/web-audit-squad backlog
+/web-audit-squad implement-plan
+```
+
+## Commands
+
+| Command | What it does |
+|---|---|
+| `init` | Create `.claude/web-audit-squad/` state files |
+| `map` | Run scout, refresh `WEB_STRUCTURE.md` and `CURRENT_STATE.md` |
+| `audit [scope]` | Map if needed, rank pages, audit priority pages one by one |
+| `page <route>` | Full seven-agent audit of one route/page |
+| `backlog` | Summarize P0/P1/P2 queue and next execution order |
+| `implement-plan` | Implement an accepted plan (requires explicit user approval) |
 
 ## Token-light protocol
 
@@ -85,14 +101,14 @@ Prioritize pages by business/risk impact:
 
 For each selected page, dispatch all seven subagents in parallel when Claude Code supports it. If the runtime serializes calls, still keep each agent in its own context.
 
-Use these exact agent names:
-- `web-db-security-performance`
-- `web-uiux-performance-designer`
-- `web-heuristics-guardian`
-- `web-contrarian-auditor`
-- `web-expansionist`
-- `web-first-principles`
-- `web-page-executor`
+Agent names and focus — see `references/agents.md` for full output formats:
+- `web-db-security-performance` — secrets, RLS, SQL injection, N+1 queries, storage exposure
+- `web-uiux-performance-designer` — UX, CTAs, accessibility, perceived performance
+- `web-heuristics-guardian` — Nielsen's 10 heuristics, names violations, two fixes each
+- `web-contrarian-auditor` — fatal flaws, dead buttons, broken flows, no-op forms
+- `web-expansionist` — conversion, SEO/GEO, onboarding, pricing upside
+- `web-first-principles` — solves the right problem? what to keep unchanged?
+- `web-page-executor` — ordered implementation plan with acceptance criteria and rollback
 
 Delegation packet:
 
