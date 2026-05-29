@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Web Audit Squad</title>
+<style>
+  :root {
+    --bg: #0f0f11;
+    --surface: #17171a;
+    --surface2: #1f1f23;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #e8e8ec;
+    --muted: #6b6b78;
+    --accent: #7c6af7;
+    --accent2: #a78bfa;
+    --red: #f87171;
+    --amber: #fbbf24;
+    --green: #4ade80;
+    --blue: #60a5fa;
+    --teal: #2dd4bf;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  /* ── Header ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--teal) 100%);
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .logo-text { font-size: 15px; font-weight: 600; letter-spacing: -0.3px; }
+  .logo-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+  .header-right { display: flex; gap: 8px; align-items: center; }
+
+  /* ── Buttons ── */
+  .btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 12px;
+    font-family: var(--font);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn:hover { background: rgba(255,255,255,0.07); border-color: rgba(255,255,255,0.2); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+  .btn-primary:hover { background: var(--accent2); border-color: var(--accent2); }
+  .btn-danger { border-color: rgba(248,113,113,0.3); color: var(--red); }
+  .btn-danger:hover { background: rgba(248,113,113,0.1); }
+
+  /* ── Route input ── */
+  .route-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    margin-bottom: 20px;
+  }
+  .route-label { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; flex-shrink: 0; }
+  .route-select {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    flex: 1;
+  }
+  .route-select option { background: #1f1f23; }
+
+  /* ── Phase track ── */
+  .phase-track {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .phase {
+    flex: 1;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 10px;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    transition: background 0.3s, color 0.3s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .phase:last-child { border-right: none; }
+  .phase.active {
+    background: rgba(124,106,247,0.15);
+    color: var(--accent2);
+    font-weight: 500;
+  }
+  .phase.done {
+    background: rgba(74,222,128,0.08);
+    color: var(--green);
+  }
+  .phase .phase-num { display: block; font-size: 16px; margin-bottom: 2px; }
+
+  /* ── Summary stats ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .stat-val { font-size: 26px; font-weight: 600; letter-spacing: -1px; }
+  .stat-card.p0 .stat-val { color: var(--red); }
+  .stat-card.p1 .stat-val { color: var(--amber); }
+  .stat-card.p2 .stat-val { color: var(--green); }
+  .stat-card.rep .stat-val { color: var(--accent2); }
+
+  /* ── Agent grid ── */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .agent-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .agent-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .agent-card.active { border-color: rgba(124,106,247,0.5); }
+  .agent-card.done-ok { border-color: rgba(74,222,128,0.3); }
+  .agent-card.done-repaired { border-color: rgba(251,191,36,0.4); }
+  .agent-card.error { border-color: rgba(248,113,113,0.4); }
+
+  .agent-top {
+    height: 3px;
+    width: 100%;
+  }
+  .agent-body { padding: 10px 8px 8px; }
+  .agent-icon-wrap {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .agent-name { font-size: 10px; font-weight: 600; letter-spacing: 0.1px; margin-bottom: 2px; }
+  .agent-role { font-size: 9px; color: var(--muted); line-height: 1.4; margin-bottom: 6px; }
+
+  /* Progress bar */
+  .prog-track {
+    height: 3px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .prog-fill {
+    height: 100%;
+    border-radius: 2px;
+    width: 0%;
+    transition: width 0.35s ease;
+  }
+
+  /* Status badge */
+  .badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 20px;
+    font-weight: 500;
+    display: inline-block;
+  }
+  .badge-idle { background: rgba(107,107,120,0.2); color: var(--muted); }
+  .badge-running { background: rgba(96,165,250,0.15); color: var(--blue); }
+  .badge-done { background: rgba(74,222,128,0.12); color: var(--green); }
+  .badge-repaired { background: rgba(251,191,36,0.15); color: var(--amber); }
+  .badge-error { background: rgba(248,113,113,0.12); color: var(--red); }
+  .badge-retrying { background: rgba(251,191,36,0.12); color: var(--amber); animation: blink 0.8s ease-in-out infinite; }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.5} }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinning { display: inline-block; animation: spin 1s linear infinite; }
+
+  /* Findings */
+  .finding-list { margin-top: 6px; display: flex; flex-direction: column; gap: 3px; }
+  .finding {
+    font-size: 9px;
+    padding: 4px 5px;
+    border-radius: 4px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    line-height: 1.4;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    color: var(--muted);
+  }
+  .finding:hover { border-color: var(--border2); color: var(--text); }
+  .finding .f-pri {
+    font-size: 8px;
+    font-weight: 700;
+    margin-right: 3px;
+  }
+  .finding.p0 { border-left: 2px solid var(--red); }
+  .finding.p1 { border-left: 2px solid var(--amber); }
+  .finding.p2 { border-left: 2px solid var(--green); }
+  .finding.p0 .f-pri { color: var(--red); }
+  .finding.p1 .f-pri { color: var(--amber); }
+  .finding.p2 .f-pri { color: var(--green); }
+  .finding.skel { background: rgba(255,255,255,0.04); border-color: transparent; color: transparent; animation: skeleton 1.4s ease-in-out infinite; }
+  @keyframes skeleton { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
+
+  /* ── Bottom panels ── */
+  .panels {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .panel-head {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .panel-head .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .panel-head .dot.green { background: var(--green); }
+  .panel-body { padding: 12px 14px; min-height: 100px; max-height: 180px; overflow-y: auto; }
+  .panel-body::-webkit-scrollbar { width: 4px; }
+  .panel-body::-webkit-scrollbar-track { background: transparent; }
+  .panel-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+  /* Detail panel */
+  .detail-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .detail-desc { font-size: 11px; color: var(--muted); line-height: 1.6; }
+  .detail-meta { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+  }
+
+  /* Repair log */
+  .log-entry {
+    display: grid;
+    grid-template-columns: 60px 16px 1fr;
+    gap: 4px;
+    align-items: flex-start;
+    font-size: 11px;
+    padding: 3px 0;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.5;
+  }
+  .log-entry:last-child { border-bottom: none; }
+  .log-ts { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .log-icon { text-align: center; }
+  .log-msg { color: var(--text); }
+  .log-ok { color: var(--green); }
+  .log-err { color: var(--red); }
+  .log-fix { color: var(--amber); }
+  .log-info { color: var(--blue); }
+  .log-empty { color: var(--muted); font-style: italic; font-size: 11px; }
+
+  /* Fault indicator */
+  .fault-indicator {
+    display: none;
+    font-size: 10px;
+    color: var(--amber);
+    background: rgba(251,191,36,0.1);
+    border: 1px solid rgba(251,191,36,0.2);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    align-items: center;
+    gap: 5px;
+  }
+  .fault-indicator.visible { display: flex; }
+
+  /* Glow pulse on running agents */
+  @keyframes glow-pulse {
+    0%,100% { box-shadow: 0 0 0 0 rgba(124,106,247,0); }
+    50% { box-shadow: 0 0 12px 2px rgba(124,106,247,0.25); }
+  }
+  .agent-card.running-glow { animation: glow-pulse 1.5s ease-in-out infinite; }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🛡</div>
+    <div>
+      <div class="logo-text">Web Audit Squad</div>
+      <div class="logo-sub">Seven-agent parallel audit system</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="fault-indicator" id="fault-indicator">⚡ Fault staged on <strong id="fault-name"></strong></div>
+    <button class="btn btn-danger" onclick="injectFault()">⚡ Inject fault</button>
+    <button class="btn" onclick="resetAll()">↺ Reset</button>
+    <button class="btn btn-primary" id="run-btn" onclick="startAudit()">▶ Run audit</button>
+  </div>
+</div>
+
+<!-- Route bar -->
+<div class="route-bar">
+  <span class="route-label">Route</span>
+  <select class="route-select" id="route-sel">
+    <option>/landing</option>
+    <option>/auth/login</option>
+    <option>/pricing</option>
+    <option>/dashboard</option>
+    <option>/checkout</option>
+    <option>/onboarding</option>
+    <option>/settings/billing</option>
+  </select>
+</div>
+
+<!-- Phase track -->
+<div class="phase-track">
+  <div class="phase" id="ph0"><span class="phase-num">⚙</span>0 · setup</div>
+  <div class="phase" id="ph1"><span class="phase-num">🗺</span>1 · map</div>
+  <div class="phase" id="ph2"><span class="phase-num">📋</span>2 · choose</div>
+  <div class="phase" id="ph3"><span class="phase-num">🤖</span>3 · agents</div>
+  <div class="phase" id="ph4"><span class="phase-num">🔄</span>4 · ux loop</div>
+  <div class="phase" id="ph5"><span class="phase-num">✅</span>5 · synthesis</div>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="stat-card p0"><div class="stat-label">P0 blockers</div><div class="stat-val" id="s-p0">0</div></div>
+  <div class="stat-card p1"><div class="stat-label">P1 issues</div><div class="stat-val" id="s-p1">0</div></div>
+  <div class="stat-card p2"><div class="stat-label">P2 polish</div><div class="stat-val" id="s-p2">0</div></div>
+  <div class="stat-card rep"><div class="stat-label">Self-repairs</div><div class="stat-val" id="s-rep">0</div></div>
+</div>
+
+<!-- Agent grid -->
+<div class="agent-grid" id="agent-grid"></div>
+
+<!-- Bottom panels -->
+<div class="panels">
+  <div class="panel">
+    <div class="panel-head"><span class="dot"></span>Inspector</div>
+    <div class="panel-body" id="detail-panel">
+      <div class="detail-desc" style="color:var(--muted)">Click an agent or finding to inspect it.</div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-head"><span class="dot green"></span>Repair log</div>
+    <div class="panel-body" id="repair-log">
+      <div class="log-empty">Repair log empty — run an audit first.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const AGENTS = [
+  { id:'sec',  name:'Security',      role:'Secrets, RLS, SQL injection, N+1, auth bypass', icon:'🔒', color:'#f87171', desc:'Scans for exposed secrets, RLS misconfigs, SQL injection, N+1 queries, CORS misconfig, storage exposure, auth bypass, and missing rate limits.' },
+  { id:'ux',   name:'UX / Perf',     role:'CTAs, a11y, performance, empty states',          icon:'🎨', color:'#60a5fa', desc:'Reviews UX friction, CTA clarity, WCAG 2.2 AA accessibility, perceived performance, responsive layout, and empty/error/loading states.' },
+  { id:'heur', name:'Heuristics',    role:"Nielsen's 10 heuristics, two fixes each",        icon:'📐', color:'#a78bfa', desc:"Checks Nielsen's 10 usability heuristics. Names the violated heuristic for every finding and proposes exactly two fixes." },
+  { id:'con',  name:'Contrarian',    role:'Fatal flaws, dead buttons, broken flows',         icon:'💥', color:'#fb923c', desc:'Hunts for fatal flaws: dead buttons, broken flows, no-op forms, misleading labels, and contradictory states that cause abandonment.' },
+  { id:'exp',  name:'Expansionist',  role:'Conversion, SEO/GEO, onboarding upside',         icon:'📈', color:'#4ade80', desc:'Identifies conversion uplift, SEO/GEO improvements, onboarding gaps, pricing structure, viral loops, and missing CTAs.' },
+  { id:'fp',   name:'First Principles', role:'Right problem? What to keep unchanged?',     icon:'💡', color:'#fbbf24', desc:'Asks if the page solves the right problem. Flags over-engineering and must include at least one keep-unchanged recommendation.' },
+  { id:'exec', name:'Executor',      role:'Ordered plan, acceptance criteria, rollback',     icon:'✅', color:'#2dd4bf', desc:'Produces the ordered implementation plan. Orders P0 before P1 before P2. Every step has an acceptance criterion and rollback instruction.' },
+];
+
+const FINDINGS = {
+  sec:  [{p:'P0',t:'JWT secret committed in .env.local'},{p:'P0',t:'No CSRF token on auth form'},{p:'P1',t:'Rate limit missing on /api/login'},{p:'P2',t:'Session cookie not HttpOnly'}],
+  ux:   [{p:'P1',t:'Primary CTA below fold on 375px'},{p:'P1',t:'No loading state on submit'},{p:'P2',t:'Missing aria-label on icon buttons'},{p:'P2',t:'Error message not SR-announced'}],
+  heur: [{p:'P1',t:'#1 Visibility — no progress on multi-step'},{p:'P1',t:'#5 Error prevention — no confirm on delete'},{p:'P2',t:'#4 Consistency — two modal patterns used'}],
+  con:  [{p:'P0',t:'"Get started" CTA links to 404'},{p:'P0',t:'Plan upgrade silently fails'},{p:'P1',t:'Password reset email never arrives'}],
+  exp:  [{p:'P1',t:'No social proof near pricing CTA'},{p:'P1',t:'Missing <meta description> on landing'},{p:'P2',t:'Annual billing toggle hidden below fold'}],
+  fp:   [{p:'P1',t:'Credit card asked before value shown'},{p:'P2',t:'Dashboard complexity vs new-user needs'},{p:'P2',t:'KEEP: onboarding checklist (high completion)'}],
+  exec: [{p:'P0',t:'Rotate JWT secret + update .gitignore'},{p:'P0',t:'Fix CTA href → /signup'},{p:'P1',t:'Sticky mobile CTA implementation'}],
+};
+
+const ERRORS = ['Timeout after 30s','Malformed JSON response','Context window exceeded','Empty findings array returned'];
+const REPAIRS = ['Retrying with reduced packet (−30%)','Falling back to sequential mode','Re-requesting raw text, re-parsing','Re-sending with explicit output schema'];
+
+let agentState = {};
+let repairCount = 0;
+let faultedId = null;
+let timers = [];
+
+function buildGrid() {
+  const grid = document.getElementById('agent-grid');
+  grid.innerHTML = '';
+  AGENTS.forEach(a => {
+    const card = document.createElement('div');
+    card.className = 'agent-card';
+    card.id = 'card-' + a.id;
+    card.onclick = () => showDetail(a.id);
+    card.innerHTML = `
+      <div class="agent-top" style="background:${a.color}"></div>
+      <div class="agent-body">
+        <div class="agent-icon-wrap" style="background:${a.color}22">${a.icon}</div>
+        <div class="agent-name">${a.name}</div>
+        <div class="agent-role">${a.role}</div>
+        <div class="prog-track"><div class="prog-fill" id="fill-${a.id}" style="background:${a.color}"></div></div>
+        <div class="badge badge-idle" id="badge-${a.id}">idle</div>
+        <div class="finding-list" id="fl-${a.id}"></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function setPhase(n) {
+  for (let i = 0; i <= 5; i++) {
+    const el = document.getElementById('ph' + i);
+    el.className = 'phase' + (i < n ? ' done' : i === n ? ' active' : '');
+  }
+}
+
+function ts() {
+  return new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function log(type, msg) {
+  const el = document.getElementById('repair-log');
+  if (el.querySelector('.log-empty')) el.innerHTML = '';
+  const icons = {ok:'✓',err:'✗',fix:'↻',info:'·'};
+  const cls = {ok:'log-ok',err:'log-err',fix:'log-fix',info:'log-info'};
+  el.innerHTML += `<div class="log-entry"><span class="log-ts">${ts()}</span><span class="log-icon ${cls[type]}">${icons[type]}</span><span class="log-msg">${msg}</span></div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function showDetail(id) {
+  const a = AGENTS.find(x => x.id === id);
+  const s = agentState[id] || {};
+  const panel = document.getElementById('detail-panel');
+  panel.innerHTML = `
+    <div class="detail-title">${a.icon} ${a.name}</div>
+    <div class="detail-desc">${a.desc}</div>
+    <div class="detail-meta">
+      <span class="chip">Status: ${s.status || 'idle'}</span>
+      ${s.error ? `<span class="chip" style="color:var(--red);border-color:rgba(248,113,113,0.3)">⚠ ${s.error}</span>` : ''}
+      ${s.repair ? `<span class="chip" style="color:var(--amber);border-color:rgba(251,191,36,0.3)">↻ ${s.repair}</span>` : ''}
+      ${(FINDINGS[id]||[]).length > 0 && s.status === 'done' ? `<span class="chip">${(FINDINGS[id]||[]).filter(f=>f.p==='P0').length} P0 · ${(FINDINGS[id]||[]).filter(f=>f.p==='P1').length} P1 · ${(FINDINGS[id]||[]).filter(f=>f.p==='P2').length} P2</span>` : ''}
+    </div>`;
+}
+
+function updateStats() {
+  let p0=0, p1=0, p2=0;
+  AGENTS.forEach(a => {
+    if ((agentState[a.id]||{}).status === 'done') {
+      (FINDINGS[a.id]||[]).forEach(f => {
+        if (f.p==='P0') p0++;
+        else if (f.p==='P1') p1++;
+        else p2++;
+      });
+    }
+  });
+  document.getElementById('s-p0').textContent = p0;
+  document.getElementById('s-p1').textContent = p1;
+  document.getElementById('s-p2').textContent = p2;
+  document.getElementById('s-rep').textContent = repairCount;
+}
+
+function renderFindings(id) {
+  const fl = document.getElementById('fl-' + id);
+  fl.innerHTML = '';
+  (FINDINGS[id]||[]).forEach(f => {
+    const div = document.createElement('div');
+    div.className = 'finding ' + f.p.toLowerCase();
+    div.innerHTML = `<span class="f-pri">${f.p}</span>${f.t}`;
+    div.onclick = e => {
+      e.stopPropagation();
+      const a = AGENTS.find(x => x.id === id);
+      document.getElementById('detail-panel').innerHTML = `
+        <div class="detail-title" style="color:${f.p==='P0'?'var(--red)':f.p==='P1'?'var(--amber)':'var(--green)'}">${f.p} · ${a.name}</div>
+        <div class="detail-desc">${f.t}</div>`;
+    };
+    fl.appendChild(div);
+  });
+}
+
+function runAgent(a, baseDelay, onDone) {
+  agentState[a.id] = { status: 'running' };
+  const card = document.getElementById('card-' + a.id);
+  const badge = document.getElementById('badge-' + a.id);
+  const fill = document.getElementById('fill-' + a.id);
+  const fl = document.getElementById('fl-' + a.id);
+
+  card.className = 'agent-card active running-glow';
+  badge.className = 'badge badge-running';
+  badge.innerHTML = '<span class="spinning">⟳</span> running';
+
+  // Skeleton
+  fl.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    fl.innerHTML += `<div class="finding skel">placeholder text for skeleton</div>`;
+  }
+
+  let progress = 0;
+  const ticker = setInterval(() => {
+    progress = Math.min(progress + Math.random() * 15, 88);
+    fill.style.width = progress + '%';
+  }, 180);
+  timers.push(ticker);
+
+  const t = setTimeout(() => {
+    clearInterval(ticker);
+    const isFault = faultedId === a.id;
+
+    if (isFault) {
+      const err = ERRORS[Math.floor(Math.random() * ERRORS.length)];
+      const repair = REPAIRS[Math.floor(Math.random() * REPAIRS.length)];
+      agentState[a.id] = { status: 'retrying', error: err, repair };
+      card.className = 'agent-card error';
+      badge.className = 'badge badge-retrying';
+      badge.textContent = '↻ retrying';
+      fl.innerHTML = `<div class="finding p0"><span class="f-pri">ERR</span>${err}</div>`;
+      fill.style.width = '40%';
+      log('err', `[${a.name}] ${err}`);
+
+      const t2 = setTimeout(() => {
+        log('fix', `[${a.name}] ${repair}`);
+        repairCount++;
+        updateStats();
+
+        const t3 = setTimeout(() => {
+          agentState[a.id] = { status: 'done', repair };
+          card.className = 'agent-card done-repaired';
+          badge.className = 'badge badge-repaired';
+          badge.textContent = '✓ repaired';
+          fill.style.width = '100%';
+          renderFindings(a.id);
+          faultedId = null;
+          document.getElementById('fault-indicator').classList.remove('visible');
+          log('ok', `[${a.name}] Recovered — ${(FINDINGS[a.id]||[]).length} findings written`);
+          updateStats();
+          if (onDone) onDone();
+        }, 900);
+        timers.push(t3);
+      }, 750);
+      timers.push(t2);
+
+    } else {
+      agentState[a.id] = { status: 'done' };
+      card.className = 'agent-card done-ok';
+      badge.className = 'badge badge-done';
+      badge.textContent = '✓ done';
+      fill.style.width = '100%';
+      renderFindings(a.id);
+      log('ok', `[${a.name}] ${(FINDINGS[a.id]||[]).length} findings, no errors`);
+      updateStats();
+      if (onDone) onDone();
+    }
+  }, baseDelay);
+  timers.push(t);
+}
+
+function injectFault() {
+  const candidates = AGENTS.filter(a => !agentState[a.id] || agentState[a.id].status === 'idle');
+  if (!candidates.length) {
+    log('info', 'No idle agents to fault — start an audit first');
+    return;
+  }
+  const target = candidates[Math.floor(Math.random() * candidates.length)];
+  faultedId = target.id;
+  document.getElementById('fault-name').textContent = target.name;
+  document.getElementById('fault-indicator').classList.add('visible');
+  log('info', `Fault staged on [${target.name}] — will trigger self-repair`);
+}
+
+function resetAll() {
+  timers.forEach(t => { clearInterval(t); clearTimeout(t); });
+  timers = [];
+  agentState = {}; repairCount = 0; faultedId = null;
+  ['s-p0','s-p1','s-p2','s-rep'].forEach(id => document.getElementById(id).textContent = '0');
+  document.getElementById('fault-indicator').classList.remove('visible');
+  document.getElementById('detail-panel').innerHTML = '<div class="detail-desc" style="color:var(--muted)">Click an agent or finding to inspect it.</div>';
+  document.getElementById('repair-log').innerHTML = '<div class="log-empty">Repair log empty — run an audit first.</div>';
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('run-btn').textContent = '▶ Run audit';
+  setPhase(-1);
+  buildGrid();
+}
+
+function startAudit() {
+  resetAll();
+  document.getElementById('run-btn').disabled = true;
+  document.getElementById('run-btn').textContent = 'Running…';
+  const route = document.getElementById('route-sel').value;
+  log('info', `Audit started — route: ${route}`);
+  setPhase(0);
+
+  const t1 = setTimeout(() => { setPhase(1); log('info', 'Mapping route graph and structure'); }, 300);
+  const t2 = setTimeout(() => { setPhase(2); log('info', `${route} ranked #1 by business impact`); }, 900);
+  const t3 = setTimeout(() => {
+    setPhase(3);
+    log('info', 'Dispatching 7 agents in parallel');
+    let done = 0;
+    AGENTS.forEach((a, i) => {
+      const delay = 1200 + Math.random() * 2000;
+      const t = setTimeout(() => {
+        runAgent(a, delay, () => {
+          done++;
+          if (done === AGENTS.length) {
+            const t4 = setTimeout(() => { setPhase(4); log('info', 'UX correction loop — heuristics vetting proposals'); }, 200);
+            const t5 = setTimeout(() => {
+              setPhase(5);
+              log('ok', 'Synthesis complete — BACKLOG.md updated');
+              document.getElementById('run-btn').disabled = false;
+              document.getElementById('run-btn').textContent = '▶ Run audit';
+            }, 1400);
+            timers.push(t4, t5);
+          }
+        });
+      }, i * 80);
+      timers.push(t);
+    });
+  }, 1200);
+  timers.push(t1, t2, t3);
+}
+
+buildGrid();
+</script>
+</body>
+</html>

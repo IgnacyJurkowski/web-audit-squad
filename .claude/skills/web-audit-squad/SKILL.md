@@ -11,6 +11,7 @@ allowed-tools:
   - Agent(web-db-security-performance,web-uiux-performance-designer,web-heuristics-guardian,web-contrarian-auditor,web-expansionist,web-first-principles,web-page-executor)
   - Bash(python3 .claude/skills/web-audit-squad/scripts/scout.py *)
   - Bash(python3 .claude/skills/web-audit-squad/scripts/state.py *)
+  - Bash(stat *)
 ---
 
 # Web Audit Squad
@@ -40,7 +41,7 @@ Common follow-ups:
 | `init` | Create `.claude/web-audit-squad/` state files |
 | `map` | Run scout, refresh `WEB_STRUCTURE.md` and `CURRENT_STATE.md` |
 | `audit [scope]` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). If not, run map first. Then rank pages and audit in priority order. |
-| `page <route>` | Full seven-agent audit of one route/page |
+| `page <route>` | Check if WEB_STRUCTURE.md exists and is less than 24 hours old (check mtime via Bash). If not, run map first. Then run the full seven-agent audit of the specified route/page. |
 | `backlog` | Summarize P0/P1/P2 queue and next execution order |
 | `implement-plan` | Implement an accepted plan. Before touching any product file, print: "Ready to implement [N] changes from BACKLOG.md. Type CONFIRM to proceed or CANCEL to abort." Do not edit product code until the user sends the exact word CONFIRM in their next message. |
 
@@ -150,10 +151,10 @@ Return: only your role-specific table plus top 3 recommendations.
 
 ### Phase 4 — UI/UX correction loop
 
-1. UI/UX Expert 1 proposes improvements.
+1. web-uiux-performance-designer proposes improvements.
 2. Heuristics Guardian checks those proposals against Nielsen's 10 heuristics.
 3. If a violation exists, record heuristic, breakage, two fixes, and chosen option.
-4. UI/UX Expert 1's final recommendation must use the chosen option.
+4. web-uiux-performance-designer's final recommendation must use the chosen option.
 
 ### Phase 5 — synthesis and backlog
 
@@ -199,8 +200,8 @@ For each page:
 ### P2
 
 ## Implementation order
-| Step | File/route | Change | Risk | Verification |
-|---|---|---|---|---|
+| Step | File/route | Change | Risk | Acceptance criteria | Rollback |
+|---|---|---|---|---|---|
 
 ## Regression checklist
 - [ ] desktop/mobile
