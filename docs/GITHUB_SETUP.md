@@ -1,6 +1,6 @@
 # GitHub setup commands
 
-Replace `YOUR_GITHUB_USERNAME` with your GitHub username or organization.
+Replace `IgnacyJurkowski` with your GitHub username or organization.
 
 ## 1. Create the local repository
 
@@ -18,7 +18,7 @@ git commit -m "Initial Web Audit Squad Claude Code skill"
 
 ```bash
 gh auth login
-gh repo create YOUR_GITHUB_USERNAME/web-audit-squad \
+gh repo create IgnacyJurkowski/web-audit-squad \
   --public \
   --description "Token-light seven-subagent Claude Code skill for web app audits" \
   --source=. \
@@ -42,7 +42,7 @@ gh release create v2.0.0 web-audit-squad.zip \
 ## 4. Installation command for users
 
 ```bash
-curl -L -o web-audit-squad.zip https://github.com/YOUR_GITHUB_USERNAME/web-audit-squad/releases/latest/download/web-audit-squad.zip
+curl -L -o web-audit-squad.zip https://github.com/IgnacyJurkowski/web-audit-squad/releases/latest/download/web-audit-squad.zip
 unzip -o web-audit-squad.zip
 ```
 
@@ -55,7 +55,7 @@ Then restart Claude Code and run:
 ## 5. Alternative: install from git checkout
 
 ```bash
-git clone https://github.com/YOUR_GITHUB_USERNAME/web-audit-squad.git
+git clone https://github.com/IgnacyJurkowski/web-audit-squad.git
 cd web-audit-squad
 ./install.sh /path/to/target/web-app
 ```

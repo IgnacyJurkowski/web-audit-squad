@@ -35,7 +35,7 @@ It creates a durable audit workspace, maps your web structure, checks links/acti
 From the target project root:
 
 ```bash
-curl -L -o web-audit-squad.zip https://github.com/YOUR_GITHUB_USERNAME/web-audit-squad/releases/latest/download/web-audit-squad.zip
+curl -L -o web-audit-squad.zip https://github.com/IgnacyJurkowski/web-audit-squad/releases/latest/download/web-audit-squad.zip
 unzip -o web-audit-squad.zip
 ```
 
