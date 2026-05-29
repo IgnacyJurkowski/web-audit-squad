@@ -1,0 +1,7 @@
+.DS_Store
+*.pyc
+__pycache__/
+.env
+.env.*
+!.env.example
+.claude/web-audit-squad/SCOUT.json
