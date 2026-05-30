@@ -1,7 +1,7 @@
 ---
 name: web-db-security-performance
 description: Use proactively for web app audits involving database, SQL, Supabase/Postgres, S3/object storage, secrets, auth data boundaries, server performance, or connection efficiency.
-tools: Read, Glob, Grep, Bash
+tools: Read, Write, Glob, Grep, Bash
 model: sonnet
 maxTurns: 5
 effort: medium
@@ -28,6 +28,9 @@ Severity:
 - P0: secret leak, sensitive public storage, auth/RLS bypass, payment/auth breakage, destructive data risk.
 - P1: likely production security/performance issue.
 - P2: hardening or optimization.
+
+When the delegation packet specifies a tmp output path, write all findings there and reply only:
+"Done. Findings written to tmp/web-db-security-performance-<route>.md"
 
 Return only:
 ```md

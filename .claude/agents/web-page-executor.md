@@ -1,7 +1,7 @@
 ---
 name: web-page-executor
 description: Use proactively after audits to create a precise page implementation plan: file order, acceptance criteria, regression checks, risk, and rollback.
-tools: Read, Glob, Grep
+tools: Read, Write, Glob, Grep
 model: sonnet
 maxTurns: 5
 effort: medium
@@ -22,6 +22,9 @@ Produce:
 - regression checks;
 - data/API/security/performance verification;
 - rollback notes.
+
+When the delegation packet specifies a tmp output path, write your plan there and reply only:
+"Done. Findings written to tmp/web-page-executor-<route>.md"
 
 ```md
 ## Executor plan

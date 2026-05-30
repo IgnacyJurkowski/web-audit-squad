@@ -9,10 +9,10 @@ Each agent receives the delegation packet from SKILL.md Phase 3 and returns only
 **Focus**: secrets, RLS, SQL injection, N+1 queries, CORS misconfig, storage exposure, auth bypass, rate limiting gaps.
 
 **Output format**:
-| # | Finding | Severity | File:line | Recommendation |
-|---|---|---|---|---|
+| Severity | Finding | Evidence | Impact | Fix direction | Verify |
+|---|---|---|---|---|---|
 
-Top 3 recommendations (numbered list).
+Top 3 actions (numbered list).
 
 ---
 
@@ -21,10 +21,10 @@ Top 3 recommendations (numbered list).
 **Focus**: UX friction, CTA clarity, accessibility (WCAG 2.2 AA), perceived performance, responsive layout, empty/error/loading states.
 
 **Output format**:
-| # | Finding | Severity | Location | Recommendation |
-|---|---|---|---|---|
+| Priority | Proposal | User/business reason | Evidence | Risk if overdone | Measure |
+|---|---|---|---|---|---|
 
-Top 3 recommendations (numbered list).
+Proposals requiring heuristic review (numbered list).
 
 **Note**: accessibility findings are first-class. Flag any WCAG 2.2 AA violation as P1 minimum.
 
@@ -35,10 +35,10 @@ Top 3 recommendations (numbered list).
 **Focus**: Nielsen's 10 heuristics. Name the violated heuristic for every finding. Propose exactly two fixes per violation.
 
 **Output format**:
-| # | Heuristic violated | Observed breakage | Fix A | Fix B |
-|---|---|---|---|---|
+| Area/proposal | Heuristic | How it is broken | Fix A | Fix B | Chosen |
+|---|---|---|---|---|---|
 
-Top 3 recommendations (numbered list).
+No-violation notes (for areas checked and cleared).
 
 **Veto power**: may reject any UX proposal from `web-uiux-performance-designer` that introduces a new heuristic violation. Record veto in the Nielsen correction loop table.
 
@@ -49,10 +49,10 @@ Top 3 recommendations (numbered list).
 **Focus**: fatal flaws, dead buttons, broken flows, no-op forms, misleading labels, contradictory states, things that will make users abandon.
 
 **Output format**:
-| # | Fatal flaw | Reproduction path | Severity | Fix |
+| Severity | Issue | Evidence | Why it matters | Fix direction |
 |---|---|---|---|---|
 
-Top 3 recommendations (numbered list).
+Ignore / do not optimize section (list of non-problems).
 
 ---
 
@@ -61,10 +61,10 @@ Top 3 recommendations (numbered list).
 **Focus**: conversion uplift, SEO/GEO improvements, onboarding gaps, pricing structure, viral/referral loops, missing CTAs, discoverability.
 
 **Output format**:
-| # | Opportunity | Estimated impact | Effort | Recommendation |
-|---|---|---|---|---|
+| Opportunity | Why now | Evidence | Test | Effort | Guardrail |
+|---|---|---|---|---|---|
 
-Top 3 recommendations (numbered list).
+Avoid for now section (speculative or harmful ideas).
 
 **Constraint**: no suggestions that break existing working flows. Flag any conflict with `web-contrarian-auditor` findings.
 
@@ -75,10 +75,12 @@ Top 3 recommendations (numbered list).
 **Focus**: is the page solving the right problem? What assumptions are being made? What should stay exactly as-is? What is over-engineered?
 
 **Output format**:
-| # | Assumption | Valid? | Risk if wrong | Recommendation |
-|---|---|---|---|---|
+| Decision | Item | Reason | Risk of wrong move |
+|---|---|---|---|
 
-Top 3 recommendations (numbered list). Must include at least one "keep unchanged" recommendation.
+Wrong problems to avoid + simplest effective next step sections.
+
+Must include at least one "keep unchanged" decision.
 
 ---
 
@@ -87,7 +89,7 @@ Top 3 recommendations (numbered list). Must include at least one "keep unchanged
 **Focus**: ordered, safe implementation plan for the findings from all other agents. Produces the Implementation order table only — does not audit.
 
 **Output format**:
-| Step | File/route | Change | Risk | Acceptance criteria | Rollback |
+| Step | File/route/component | Change | Why now | Risk | Verification |
 |---|---|---|---|---|---|
 
 Rules:

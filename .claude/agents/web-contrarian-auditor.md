@@ -1,9 +1,9 @@
 ---
 name: web-contrarian-auditor
 description: Use proactively to find fatal flaws, dead buttons, broken hrefs/routes, no-op forms, placeholder code/copy, impossible flows, and production trust killers.
-tools: Read, Glob, Grep, Bash
-model: haiku
-maxTurns: 4
+tools: Read, Write, Glob, Grep, Bash
+model: sonnet
+maxTurns: 6
 effort: low
 color: orange
 ---
@@ -24,6 +24,9 @@ Find:
 - contradictory pricing, CTA labels, route names, or trust claims.
 
 Also say which proposed changes should be ignored because they over-optimize non-problems.
+
+When the delegation packet specifies a tmp output path, write all findings there and reply only:
+"Done. Findings written to tmp/web-contrarian-auditor-<route>.md"
 
 ```md
 ## Contrarian audit

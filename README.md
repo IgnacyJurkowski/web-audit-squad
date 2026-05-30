@@ -23,6 +23,12 @@ Or from a local checkout of this repository:
 
 ## Quick start
 
+> **Note**: This skill must be invoked as a slash command typed by you:
+> ```
+> /web-audit-squad page /pricing
+> ```
+> Claude cannot invoke it on your behalf via the Skill tool — you must type the command yourself. This is intentional: `disable-model-invocation: true` keeps the skill out of Claude's normal context until you explicitly call it.
+
 In Claude Code, from your web app root:
 
 ```text
@@ -38,7 +44,8 @@ Common follow-up commands:
 | `/web-audit-squad audit` | Map first, then audit priority pages one by one |
 | `/web-audit-squad page /pricing` | Full seven-agent audit of one specific route |
 | `/web-audit-squad backlog` | Show P0/P1/P2 queue and next execution order |
-| `/web-audit-squad implement-plan` | Implement an accepted plan (requires explicit approval) |
+| `/web-audit-squad status` | Progress table: pages audited / in-progress / queued with P0/P1/P2 counts |
+| `/web-audit-squad implement-plan A-001,A-002` | Implement specific backlog items by ID (requires explicit approval) |
 
 See `examples/audit-session.md` for a realistic session walkthrough with expected outputs.
 
@@ -51,7 +58,7 @@ Each page audit dispatches all seven subagents in parallel. Each is read-only an
 | `web-db-security-performance` | Secrets, RLS, SQL injection, N+1 queries, storage exposure | Sonnet |
 | `web-uiux-performance-designer` | CTA hierarchy, accessibility, perceived performance, copy trust | Sonnet |
 | `web-heuristics-guardian` | Nielsen's 10 heuristics — names the violation, gives two fixes | Haiku |
-| `web-contrarian-auditor` | Dead buttons, broken flows, placeholder copy, no-op forms | Haiku |
+| `web-contrarian-auditor` | Dead buttons, broken flows, placeholder copy, no-op forms | Sonnet |
 | `web-expansionist` | Conversion, SEO/GEO, onboarding, pricing upside | Haiku |
 | `web-first-principles` | Solves the right problem? What to keep unchanged? | Haiku |
 | `web-page-executor` | Ordered implementation plan with acceptance criteria and rollback | Sonnet |

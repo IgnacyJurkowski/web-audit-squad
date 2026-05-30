@@ -6,6 +6,8 @@ disable-model-invocation: true
 argument-hint: "init | map | audit [scope] | page [route] | backlog | implement-plan"
 allowed-tools:
   - Read
+  - Write
+  - Edit
   - Glob
   - Grep
   - Agent(web-db-security-performance,web-uiux-performance-designer,web-heuristics-guardian,web-contrarian-auditor,web-expansionist,web-first-principles,web-page-executor)
@@ -148,7 +150,13 @@ Before dispatching agents, read:
 - `.claude/skills/web-audit-squad/references/agents.md` — output formats and per-agent constraints
 - `.claude/skills/web-audit-squad/references/protocol.md` — severity definitions, evidence requirements, lifecycle rules
 
-For each selected page, dispatch the first six subagents in parallel when Claude Code supports it. **Do not include `web-page-executor` in the parallel batch** — it runs in Phase 5 after synthesis. If the runtime serializes calls, still keep each agent in its own context.
+For each selected page, dispatch these four subagents in parallel:
+- `web-db-security-performance`
+- `web-contrarian-auditor`
+- `web-expansionist`
+- `web-first-principles`
+
+**Do not include `web-uiux-performance-designer`, `web-heuristics-guardian`, or `web-page-executor` in the parallel batch.** UX and heuristics run sequentially in Phase 4; the executor runs in Phase 5 after synthesis. If the runtime serializes calls, still keep each agent in its own context.
 
 Agent names and focus (see `references/agents.md` for full output formats):
 - `web-db-security-performance` — secrets, RLS, SQL injection, N+1 queries, storage exposure
@@ -197,6 +205,19 @@ Merge the agent results into:
 De-duplication rule: if two or more agents flag the same issue (matched by file path + symptom), keep only the highest-severity instance. Note the source agents in the Evidence column.
 
 Persist page output to `PAGE_AUDITS/<safe-route-name>.md` when asked to update docs. Add accepted items to `BACKLOG.md`.
+
+### Dispatching web-page-executor
+After the P0/P1/P2 synthesis is written, dispatch `web-page-executor` with:
+- The synthesised P0/P1/P2 fix list
+- References to all tmp files written by Phase 3 + Phase 4 agents
+Instruct it to write its Implementation order table to:
+`.claude/web-audit-squad/tmp/web-page-executor-<route>.md`
+Read and merge its output into the PAGE_AUDITS file before deleting tmp files.
+
+### Stop condition
+After writing PAGE_AUDITS and updating BACKLOG.md and CURRENT_STATE.md, print exactly:
+"Page `<route>` complete. P0: N, P1: N, P2: N. Next: `<route>` — run `/web-audit-squad page <route>` to continue."
+Then stop. Do not auto-advance.
 
 ## Output contract
 
