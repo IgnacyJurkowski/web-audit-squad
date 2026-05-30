@@ -108,8 +108,18 @@ Each item must follow this format:
 ```
 
 ### DECISIONS.md schema
-Each entry must follow this format:
+Two sections:
+
+**Command log** — one row per command run:
 ```md
+## Command log
+| Date | Command | Scope | Finding summary | Next action |
+|---|---|---|---|---|
+```
+
+**Architectural decisions** — one entry per significant non-default choice:
+```md
+## Architectural decisions
 ### [DATE] <decision title>
 - **Context**: why this decision arose
 - **Options considered**: list
@@ -135,6 +145,12 @@ Build or refresh:
 - broken/suspicious links/actions;
 - data/API/storage/payment dependencies;
 - page priority queue.
+
+After writing the route inventory and suspicious links table, grade all suspicious links/actions by severity and populate the "Link & routing issue summary" section in `WEB_STRUCTURE.md`:
+- P0: broken link in a critical user flow (auth, payment, onboarding)
+- P1: broken link that degrades a key feature but has a workaround
+- P2: dead link in footer, docs, or low-traffic page
+Then write the Global fix plan ordered by priority.
 
 ### Phase 2 — choose pages
 
@@ -205,6 +221,32 @@ Merge the agent results into:
 De-duplication rule: if two or more agents flag the same issue (matched by file path + symptom), keep only the highest-severity instance. Note the source agents in the Evidence column.
 
 Persist page output to `PAGE_AUDITS/<safe-route-name>.md` when asked to update docs. Add accepted items to `BACKLOG.md`.
+
+### Updating CURRENT_STATE.md
+After writing PAGE_AUDITS and BACKLOG.md:
+1. Change the page row's Status from `🔄 in progress` to `✅ complete` and fill in P0/P1/P2 counts.
+2. Recalculate the "Running totals" line by counting all open items in BACKLOG.md.
+3. Update "Current focus" to the next queued page.
+
+### Updating WEB_STRUCTURE.md
+After synthesis:
+1. Find the audited route's row and update:
+   - `Audit status`: from `⬜ not audited` to `✅ [<page>.md](PAGE_AUDITS/<page>.md)`
+   - `Findings`: `P0:N P1:N P2:N`
+2. If agents discovered new broken links not in the Suspicious table, append them.
+3. If a previously-flagged suspicious link was confirmed broken or confirmed fine, update its row.
+Do not re-run scout.py — only append/update what the current page audit revealed.
+
+### Logging to DECISIONS.md
+After synthesis, append one row to the Command log:
+| Date | Command | Scope | Finding summary | Next action |
+|---|---|---|---|---|
+| <date> | `page <route>` | <files audited> | N P0, N P1, N P2 | <what to fix next> |
+
+Also log any non-default decision made during the audit:
+- `wont-fix` item: log the reason
+- `implement-plan` confirmed: log timestamp and item IDs
+- `map` re-run: log reason (staleness, new routes discovered)
 
 ### Dispatching web-page-executor
 After the P0/P1/P2 synthesis is written, dispatch `web-page-executor` with:
